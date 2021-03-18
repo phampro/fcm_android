@@ -1,6 +1,5 @@
 package kiti.team.fcm_android
 
-import android.app.Notification.FLAG_AUTO_CANCEL
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
