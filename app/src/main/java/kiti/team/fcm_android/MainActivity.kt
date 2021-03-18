@@ -1,6 +1,9 @@
 package kiti.team.fcm_android
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -8,12 +11,15 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
 	private val TAG = MainActivity::class.java.simpleName
 	
 	private val TEXT_STATE = "GAME_STATE_KEY"
+	
+	private lateinit var fcmReceiver: BroadcastReceiver
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -23,6 +29,16 @@ class MainActivity : AppCompatActivity() {
 		
 		val textView = findViewById<TextView>(R.id.textView)
 		textView.text = text
+		
+		fcmReceiver = object : BroadcastReceiver() {
+			override fun onReceive(context: Context?, intent: Intent?) {
+				textView.text = intent?.getStringExtra("title")
+			}
+		}
+		
+		LocalBroadcastManager
+			.getInstance(this)
+			.registerReceiver(fcmReceiver, IntentFilter("FCM_MESSAGE"))
 		
 		FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
 			if (!task.isSuccessful) {
@@ -59,5 +75,13 @@ class MainActivity : AppCompatActivity() {
 		outState.run {
 			putString(TEXT_STATE, "Welcome back!")
 		}
+	}
+	
+	override fun onDestroy() {
+		super.onDestroy()
+		
+		LocalBroadcastManager
+			.getInstance(this)
+			.unregisterReceiver(fcmReceiver)
 	}
 }

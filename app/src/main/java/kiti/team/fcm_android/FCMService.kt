@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlin.random.Random
@@ -18,6 +19,10 @@ import kotlin.random.Random
 class FCMService : FirebaseMessagingService() {
 	
 	private val TAG = "FCMService"
+	
+	private val broadcaster by lazy {
+		LocalBroadcastManager.getInstance(this)
+	}
 	
 	override fun onMessageReceived(remoteMessage: RemoteMessage) {
 		super.onMessageReceived(remoteMessage)
@@ -27,9 +32,14 @@ class FCMService : FirebaseMessagingService() {
 		val type = remoteMessage.data["type"] ?: ""
 		
 		val pendingIntent = createPendingIntent(type)
-
+		
 		sendNotification(title, body, pendingIntent)
-//		showNotification(this, ResultActivity::class.java, title, body)
+		
+		val intent = Intent("FCM_MESSAGE")
+		intent.putExtra("title", title)
+		intent.putExtra("body", body)
+		intent.putExtra(type, type)
+		broadcaster.sendBroadcast(intent)
 	}
 	
 	override fun onNewToken(token: String) {
@@ -120,7 +130,7 @@ class FCMService : FirebaseMessagingService() {
 			notificationIntent,
 			PendingIntent.FLAG_UPDATE_CURRENT
 		)
-		
+
 //		val stackBuilder = TaskStackBuilder.create(context)
 //		stackBuilder.addParentStack(cls)
 //		stackBuilder.addNextIntent(notificationIntent)
