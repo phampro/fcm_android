@@ -5,14 +5,19 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlin.random.Random
 
 class FCMService : FirebaseMessagingService() {
+	
+	private val TAG = "FCMService"
 	
 	override fun onMessageReceived(remoteMessage: RemoteMessage) {
 		super.onMessageReceived(remoteMessage)
@@ -22,8 +27,9 @@ class FCMService : FirebaseMessagingService() {
 		val type = remoteMessage.data["type"] ?: ""
 		
 		val pendingIntent = createPendingIntent(type)
-		
+
 		sendNotification(title, body, pendingIntent)
+//		showNotification(this, ResultActivity::class.java, title, body)
 	}
 	
 	override fun onNewToken(token: String) {
@@ -41,9 +47,7 @@ class FCMService : FirebaseMessagingService() {
 	}
 	
 	private fun newResultIntent(): PendingIntent? {
-		val resultIntent = Intent(this, ResultActivity::class.java).apply {
-			flags = (Intent.FLAG_ACTIVITY_NEW_TASK)
-		}
+		val resultIntent = Intent(this, ResultActivity::class.java)
 ////		// Create the TaskStackBuilder
 ////		return TaskStackBuilder.create(this).run {
 ////			// Add the intent, which inflates the back stack
@@ -71,7 +75,6 @@ class FCMService : FirebaseMessagingService() {
 	}
 	
 	private fun sendNotification(title: String, message: String, pendingIntent: PendingIntent?) {
-		createNotificationChannel()
 		
 		val builder = NotificationCompat.Builder(this, CHANNEL_ID)
 			.setSmallIcon(R.mipmap.ic_launcher)
@@ -81,9 +84,11 @@ class FCMService : FirebaseMessagingService() {
 			.setAutoCancel(true)
 			.setContentIntent(pendingIntent)
 		
-		NotificationManagerCompat.from(this).notify(Random.nextInt(10000), builder.build().apply {
-			flags = NotificationCompat.FLAG_AUTO_CANCEL
-		})
+		createNotificationChannel()
+		
+		val notification = builder.build()
+		
+		NotificationManagerCompat.from(this).notify(Random.nextInt(1000), notification)
 	}
 	
 	private fun createNotificationChannel() {
@@ -103,7 +108,58 @@ class FCMService : FirebaseMessagingService() {
 		}
 	}
 	
+	fun showNotification(context: Context, cls: Class<*>, title: String, content: String) {
+		val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+		
+		val notificationIntent = Intent(context, cls)
+		notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+		
+		val pendingIntent = PendingIntent.getActivity(
+			this,
+			0,
+			notificationIntent,
+			PendingIntent.FLAG_UPDATE_CURRENT
+		)
+		
+//		val stackBuilder = TaskStackBuilder.create(context)
+//		stackBuilder.addParentStack(cls)
+//		stackBuilder.addNextIntent(notificationIntent)
+//
+//		val pendingIntent = stackBuilder.getPendingIntent(
+//			DAILY_REMINDER_REQUEST_CODE, PendingIntent.FLAG_UPDATE_CURRENT
+//		)
+		
+		val notificationManager: NotificationManager? =
+			context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			val channel = NotificationChannel(
+				DAILY_REMINDER_CHANEL_ID,
+				"Channel human readable title",
+				NotificationManager.IMPORTANCE_DEFAULT
+			)
+			notificationManager?.createNotificationChannel(channel)
+		}
+		
+		val builder = NotificationCompat.Builder(context, DAILY_REMINDER_CHANEL_ID)
+			.setSmallIcon(R.mipmap.ic_launcher)
+			.setContentTitle(title)
+			.setContentText(content)
+			.setSound(alarmSound)
+			.setContentIntent(pendingIntent)
+			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+			.setAutoCancel(true)
+		
+		with(NotificationManagerCompat.from(context)) {
+			notify(DAILY_REMINDER_NOTIFY_ID, builder.build())
+		}
+	}
+	
 	companion object {
-		private const val CHANNEL_ID = "kiti.team.fcm_android"
+		private const val CHANNEL_ID = "fcm_android"
+		
+		const val DAILY_REMINDER_REQUEST_CODE = 1
+		const val DAILY_REMINDER_CHANEL_ID = "12345"
+		const val DAILY_REMINDER_NOTIFY_ID = 9999
 	}
 }
