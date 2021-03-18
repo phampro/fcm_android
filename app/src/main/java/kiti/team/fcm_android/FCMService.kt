@@ -35,7 +35,8 @@ class FCMService : FirebaseMessagingService() {
 	private fun createPendingIntent(type: String): PendingIntent? {
 		return when (type) {
 			"RESULT" -> newResultIntent()
-			else -> newResult2Intent()
+			"RESULT2" -> newResult2Intent()
+			else -> null
 		}
 	}
 	

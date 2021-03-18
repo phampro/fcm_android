@@ -37,9 +37,10 @@ class MainActivity : AppCompatActivity() {
 			Log.d(TAG, "[FirebaseToken][$token]")
 		}
 		
-		if (intent.getStringExtra("type") == "RESULT") {
+		val fcmType = intent.getStringExtra("type")
+		if (fcmType == "RESULT") {
 			startActivity(Intent(this, ResultActivity::class.java))
-		} else {
+		} else if (fcmType == "RESULT2") {
 			startActivity(Intent(this, Result2Activity::class.java))
 		}
 		
