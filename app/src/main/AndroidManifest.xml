@@ -10,7 +10,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FCM_Android">
         <activity android:name=".Result2Activity" />
-        <activity android:name=".ResultActivity" />
+        <activity android:name=".ResultActivity">
+        </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

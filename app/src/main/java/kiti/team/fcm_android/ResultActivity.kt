@@ -10,12 +10,12 @@ class ResultActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_result)
-		Log.d("ResultActivity", "onCreate")
 	}
 	
 	override fun onNewIntent(intent: Intent?) {
 		super.onNewIntent(intent)
 		Log.d("ResultActivity", "onNewIntent")
+		//TODO Handle if have data
 	}
 	
 	override fun onBackPressed() {

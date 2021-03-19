@@ -3,14 +3,13 @@ package kiti.team.fcm_android
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.TaskStackBuilder
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -52,35 +51,30 @@ class FCMService : FirebaseMessagingService() {
 		return when (type) {
 			"RESULT" -> newResultIntent()
 			"RESULT2" -> newResult2Intent()
-			else -> null
+			else -> newMainIntent()
 		}
+	}
+
+	private fun newMainIntent(): PendingIntent {
+		val resultIntent = Intent(this, MainActivity::class.java).apply {
+			flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+		}
+		return PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), resultIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 	}
 	
 	private fun newResultIntent(): PendingIntent? {
-		val resultIntent = Intent(this, ResultActivity::class.java)
-////		// Create the TaskStackBuilder
-////		return TaskStackBuilder.create(this).run {
-////			// Add the intent, which inflates the back stack
-////			addNextIntentWithParentStack(resultIntent)
-////			// Get the PendingIntent containing the entire back stack
-////			getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
-////		}
-		
-		return PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+		val resultIntent = Intent(this, ResultActivity::class.java).apply {
+			flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+		}
+
+		return PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), resultIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 	}
 	
 	private fun newResult2Intent(): PendingIntent? {
 		val resultIntent = Intent(this, Result2Activity::class.java).apply {
-			flags = (Intent.FLAG_ACTIVITY_NEW_TASK)
+			flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
 		}
-////		// Create the TaskStackBuilder
-////		return TaskStackBuilder.create(this).run {
-////			// Add the intent, which inflates the back stack
-////			addNextIntentWithParentStack(resultIntent)
-////			// Get the PendingIntent containing the entire back stack
-////			getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
-////		}
-		
+
 		return PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 	}
 	
@@ -98,7 +92,7 @@ class FCMService : FirebaseMessagingService() {
 		
 		val notification = builder.build()
 		
-		NotificationManagerCompat.from(this).notify(Random.nextInt(1000), notification)
+		NotificationManagerCompat.from(this).notify(1, notification)
 	}
 	
 	private fun createNotificationChannel() {
@@ -115,53 +109,6 @@ class FCMService : FirebaseMessagingService() {
 			val notificationManager: NotificationManager =
 				getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			notificationManager.createNotificationChannel(channel)
-		}
-	}
-	
-	fun showNotification(context: Context, cls: Class<*>, title: String, content: String) {
-		val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-		
-		val notificationIntent = Intent(context, cls)
-		notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-		
-		val pendingIntent = PendingIntent.getActivity(
-			this,
-			0,
-			notificationIntent,
-			PendingIntent.FLAG_UPDATE_CURRENT
-		)
-
-//		val stackBuilder = TaskStackBuilder.create(context)
-//		stackBuilder.addParentStack(cls)
-//		stackBuilder.addNextIntent(notificationIntent)
-//
-//		val pendingIntent = stackBuilder.getPendingIntent(
-//			DAILY_REMINDER_REQUEST_CODE, PendingIntent.FLAG_UPDATE_CURRENT
-//		)
-		
-		val notificationManager: NotificationManager? =
-			context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-		
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val channel = NotificationChannel(
-				DAILY_REMINDER_CHANEL_ID,
-				"Channel human readable title",
-				NotificationManager.IMPORTANCE_DEFAULT
-			)
-			notificationManager?.createNotificationChannel(channel)
-		}
-		
-		val builder = NotificationCompat.Builder(context, DAILY_REMINDER_CHANEL_ID)
-			.setSmallIcon(R.mipmap.ic_launcher)
-			.setContentTitle(title)
-			.setContentText(content)
-			.setSound(alarmSound)
-			.setContentIntent(pendingIntent)
-			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-			.setAutoCancel(true)
-		
-		with(NotificationManagerCompat.from(context)) {
-			notify(DAILY_REMINDER_NOTIFY_ID, builder.build())
 		}
 	}
 	
